@@ -5,52 +5,78 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: skang <skang@student.42seoul.kr>           +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2020/03/03 20:51:32 by skang             #+#    #+#             */
-/*   Updated: 2020/03/16 23:30:20 by skang            ###   ########.fr       */
+/*   Created: 2020/08/03 17:54:05 by skang             #+#    #+#             */
+/*   Updated: 2020/08/03 17:54:12 by skang            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static char	*get_read(int const fd, char *buf, int *idx)
+static char  *ft_next(char *s)
 {
-	char	buff[BUFFER_SIZE + 1];
+    char    *res;
+    int     i;
+    int     slen;
+    int     j;
 
-	*idx = read(fd, buff, BUFFER_SIZE);
-	if (*idx < BUFFER_SIZE && buff[*idx -1] != '\n') //버퍼사이즈보다 덜읽었을 때 
-	{
-		buff[*idx] = '\n';
-		buff[*idx + 1] = '\0';
-	}
-	else 
-		buff[*idx] = '\0';
-	buf = ft_strcat(buf, buff);
-	return (buf);
+    i = 0;
+    j = 0;
+    while (s[i] != '\n')
+        i++;
+    i++;
+    slen = ft_strlen(s) - i; 
+    if (!(res = malloc(sizeof(char) * slen + 1)))
+        return (NULL);
+    while (j <slen)
+        res[j++] = s[i++];
+    res[j] = '\0';
+    free(s);
+    return (res);
 }
 
-int			get_next_line(int const fd, char **line)
+static int  ft_read(int fd, char **s)
 {
-	static char		*buf = NULL;
-	int				idx;
-	char			*str;
+    int     flag;
+    char    temp[BUFFER_SIZE + 1];
 
-	if (!line || fd < 0)
-		return (-1);
-	idx = 1;
-	if (!buf)
-		buf = (char*)malloc(1);
-	while (idx > 0)
-	{
-		if ((str = ft_strchr(buf, '\n')) != NULL)
-		{
-			*str = 0;
-			*line = ft_strdup(buf);
-			ft_memmove(buf, str + 1, ft_strlen(str + 1) + 1);
-			return (1);
-		}
-		buf = get_read(fd, buf, &idx);
-	}
-	if (idx == 0)
-		*line = (char*)malloc(1);
-	return (idx);
+    while ((flag = read(fd, temp, BUFFER_SIZE)) > 0)
+    {
+        temp[flag] = '\0';
+        if (!(*s = ft_strjoin(*s, temp)))
+        {
+            free(*s);
+            *s = NULL;
+            return (0);
+        }
+        if (ft_strchr(temp, '\n'))
+            return (1);
+    }
+    return (flag);
+}    
+int         get_next_line(int fd, char **line)
+{
+    static char *s;
+    int         flag;
+
+    if (fd < 0 || !line)
+        return (-1);
+    if (!s)
+    {
+        if (!(s = malloc(sizeof(char))))
+            return (-1);
+        s[0] = 0;
+    }
+    flag = ft_read(fd, &s);
+    if (flag < 0)
+        return (-1);
+    *line = ft_strdup(s);
+    if (flag == 0 && !ft_strchr(s, '\n'))
+    {
+        free(s);
+        s = NULL;
+        return (0);
+    }
+    s = ft_next(s);
+    return (1);
 }
+
