@@ -58,7 +58,7 @@ char				*ft_save(char *buf, char *save)
 
 int					get_next_line(int fd, char **line)
 {
-	static char		*save[4096];
+	static char		*save[4000];
 	char			buf[BUFFER_SIZE + 1];
 	int				idx;
 
